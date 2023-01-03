@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+import numpy as np
 from PIL import Image
 def encode_file():
     filepaths = filedialog.askopenfilenames()
@@ -8,8 +9,11 @@ def encode_file():
             file_bytes = file.read()
         file_bytes = len(file_bytes).to_bytes(4, 'big') + file_bytes
         lines = [file_bytes[i:i+2048] for i in range(0, len(file_bytes), 2048)]
-        image = Image.new("L", (2048, len(lines)))
-        image.putdata([b for line in lines for b in line])
+        image = np.empty((len(lines), 2048), dtype=np.uint8)
+        for i, line in enumerate(lines):
+            padded_line = np.pad(np.frombuffer(line, dtype=np.uint8), (0, 2048-len(line)), mode="constant")
+            image[i] = padded_line
+        image = Image.fromarray(image, "L")
         image.save(filepath + ".png")
     print("The files have been successfully encoded!")
 def decode_file():
@@ -17,7 +21,8 @@ def decode_file():
     for filepath in filepaths:
         image = Image.open(filepath)
         width, height = image.size
-        file_bytes = b"".join(bytes([r]) for r in image.getdata())
+        image_data = np.array(image.getdata(), dtype=np.uint8)
+        file_bytes = image_data.tobytes()
         file_size = int.from_bytes(file_bytes[:4], 'big')
         file_bytes = file_bytes[4:file_size+4]
         with open(filepath[:-4], "wb") as output_file:
