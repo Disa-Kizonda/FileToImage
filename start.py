@@ -8,7 +8,7 @@ def encode_file():
     for filepath in filepaths:
         with open(filepath, "rb") as file:
             file_bytes = file.read()
-        file_bytes = struct.pack(">I", len(file_bytes)) + file_bytes
+        file_bytes = struct.pack(">Q", len(file_bytes)) + file_bytes
         num_padding_bytes = 2048 - len(file_bytes) % 2048
         file_bytes += b"\0" * num_padding_bytes
         lines = [file_bytes[i:i+2048] for i in range(0, len(file_bytes), 2048)]
@@ -44,8 +44,8 @@ def decode_file():
             image = Image.open(filepath)
             image_data = np.array(image.getdata(), dtype=np.uint8)
         file_bytes = image_data.tobytes()
-        file_size = int.from_bytes(file_bytes[:4], 'big')
-        file_bytes = file_bytes[4:file_size+4]
+        file_size = int.from_bytes(file_bytes[:8], 'big')
+        file_bytes = file_bytes[8:file_size+8]
         file_extension = re.search(r"\.[^.]*$", filepath[:-6]).group()
         output_file_path = filepath[:-6][:-len(file_extension)] + file_extension
         with open(output_file_path, "wb") as output_file:
