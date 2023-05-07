@@ -35,8 +35,7 @@ def decode_file():
         file_bytes = image_data.tobytes()
         file_size = int.from_bytes(file_bytes[:8], 'big')
         file_bytes = file_bytes[8:file_size+8]
-        file_extension = re.search(r"\.[^.]*$", filepath[:-6]).group()
-        output_file_path = filepath[:-6][:-len(file_extension)] + file_extension
+        output_file_path = re.sub(r"\.\d+\.png$", "", filepath)
         with open(output_file_path, "wb") as output_file:
             output_file.write(file_bytes)
     print("The files have been successfully decoded!")
